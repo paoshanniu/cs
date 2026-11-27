@@ -32,24 +32,25 @@
 
   .panel{position:absolute;background:rgba(12,16,22,.72);border:1px solid rgba(255,255,255,.09);
     border-radius:10px;padding:8px 12px;backdrop-filter:blur(6px)}
-  #hpBox{left:14px;bottom:calc(14px + env(safe-area-inset-bottom));display:flex;gap:16px;align-items:flex-end}
-  #hpBox .big{font-size:30px;font-weight:800;line-height:1;letter-spacing:-1px}
+  /* 注意：先给不带 env() 的兜底值，再给带 env() 的版本，老浏览器不认 env() 时不会把整条声明丢掉 */
+  #hpBox{left:14px;bottom:14px;bottom:calc(14px + env(safe-area-inset-bottom, 0px));display:flex;gap:16px;align-items:flex-end}
+  #hpBox .big{font-size:clamp(20px,4.2vmin,32px);font-weight:800;line-height:1;letter-spacing:-1px}
   #hpBox .lbl{font-size:10px;color:#8b9aab;letter-spacing:2px;margin-bottom:3px}
   #hpBox .armor{color:#7fd0ff}
-  #ammoBox{right:14px;bottom:calc(14px + env(safe-area-inset-bottom));text-align:right}
-  #ammoBox .mag{font-size:30px;font-weight:800;line-height:1;letter-spacing:-1px}
+  #ammoBox{right:14px;bottom:14px;bottom:calc(14px + env(safe-area-inset-bottom, 0px));text-align:right}
+  #ammoBox .mag{font-size:clamp(20px,4.2vmin,32px);font-weight:800;line-height:1;letter-spacing:-1px}
   #ammoBox .res{font-size:13px;color:#8b9aab;margin-left:4px}
   #ammoBox .wname{font-size:11px;color:#9fb0c2;letter-spacing:1px}
-  #topBar{left:50%;top:calc(8px + env(safe-area-inset-top));transform:translateX(-50%);display:flex;gap:18px;
-    align-items:center;font-size:13px;font-weight:700;letter-spacing:.5px}
+  #topBar{left:50%;top:8px;top:calc(8px + env(safe-area-inset-top, 0px));transform:translateX(-50%);display:flex;gap:18px;
+    align-items:center;font-size:13px;font-weight:700;letter-spacing:.5px;white-space:nowrap}
   #topBar .s1{color:#ffd166}#topBar .s2{color:#7fd0ff}
-  #mapName{left:50%;top:calc(46px + env(safe-area-inset-top));transform:translateX(-50%);
+  #mapName{left:50%;top:46px;top:calc(46px + env(safe-area-inset-top, 0px));transform:translateX(-50%);
     font-size:11px;color:#93a4b6;letter-spacing:2px;padding:3px 10px}
-  #feed{position:absolute;right:14px;top:calc(10px + env(safe-area-inset-top));font-size:12px;
+  #feed{position:absolute;right:14px;top:10px;top:calc(10px + env(safe-area-inset-top, 0px));font-size:12px;
     line-height:1.5;text-align:right;color:#cfdae6}
   #feed div{opacity:.95;text-shadow:0 1px 3px #000}
   #feed .a{color:#ffd166}#feed .b{color:#7fd0ff}
-  #minimap{right:14px;top:calc(96px + env(safe-area-inset-top));width:104px;height:104px;
+  #minimap{right:14px;top:96px;top:calc(96px + env(safe-area-inset-top, 0px));width:104px;height:104px;
     border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(8,11,16,.6);opacity:.9}
   #respawn{position:absolute;left:50%;top:58%;transform:translate(-50%,0);font-size:14px;color:#ffd166;
     letter-spacing:1px;text-shadow:0 2px 6px #000}
@@ -85,29 +86,43 @@
   body:not(.touch) #menu .help .mb{display:none}
   #mobile{position:absolute;inset:0;z-index:10;pointer-events:none;display:none}
   body.touch.playing #mobile{display:block}
-  #stick{position:absolute;width:132px;height:132px;border-radius:50%;left:18px;
-    bottom:calc(24px + env(safe-area-inset-bottom));border:1px solid rgba(255,255,255,.16);
-    background:rgba(255,255,255,.05);pointer-events:auto}
+  #stick{position:absolute;width:132px;height:132px;border-radius:50%;left:18px;bottom:24px;
+    bottom:calc(24px + env(safe-area-inset-bottom, 0px));border:1px solid rgba(255,255,255,.16);
+    background:rgba(255,255,255,.05);pointer-events:none;display:none}
+  #stick.on{display:block}
+  #moveZone{position:absolute;left:0;bottom:0;width:46%;height:100%;pointer-events:auto}
   #stick .knob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;
     background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.3)}
   .tbtn{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;
     font-size:12px;font-weight:800;letter-spacing:1px;color:#dfe9f4;pointer-events:auto;
     background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(3px)}
   .tbtn:active,.tbtn.on{background:rgba(255,255,255,.28)}
-  #bFire{right:26px;bottom:calc(30px + env(safe-area-inset-bottom));width:96px;height:96px;font-size:14px;
+  #bFire{right:26px;bottom:30px;bottom:calc(30px + env(safe-area-inset-bottom, 0px));width:96px;height:96px;font-size:14px;
     background:rgba(255,90,70,.22);border-color:rgba(255,120,90,.45)}
   #bFire:active{background:rgba(255,90,70,.45)}
-  #bJump{right:136px;bottom:calc(38px + env(safe-area-inset-bottom));width:66px;height:66px}
-  #bReload{right:32px;bottom:calc(136px + env(safe-area-inset-bottom));width:58px;height:58px;font-size:11px}
-  #bWeap{right:104px;bottom:calc(140px + env(safe-area-inset-bottom));width:54px;height:54px;font-size:11px}
-  #bMap{right:14px;top:calc(96px + env(safe-area-inset-top));width:44px;height:44px;font-size:9px;display:none}
-  #lookZone{position:absolute;right:0;top:0;width:62%;height:100%;pointer-events:auto}
+  #bJump{right:136px;bottom:38px;bottom:calc(38px + env(safe-area-inset-bottom, 0px));width:66px;height:66px}
+  #bReload{right:32px;bottom:136px;bottom:calc(136px + env(safe-area-inset-bottom, 0px));width:58px;height:58px;font-size:11px}
+  #bWeap{right:104px;bottom:140px;bottom:calc(140px + env(safe-area-inset-bottom, 0px));width:54px;height:54px;font-size:11px}
+  #bMap{right:14px;top:96px;top:calc(96px + env(safe-area-inset-top, 0px));width:44px;height:44px;font-size:9px;display:none}
+  #lookZone{position:absolute;left:46%;right:0;top:0;height:100%;pointer-events:auto}
+
+  /* ---------- 竖屏强制横屏（浏览器不给锁横屏时的兜底） ---------- */
+  body.force-land{overflow:hidden}
+  body.force-land #app{position:fixed;left:0;top:0;right:auto;bottom:auto;width:100vh;width:100dvh;height:100vw;
+    transform-origin:0 0;transform:translateX(100vw) rotate(90deg)}
+  #rot{position:absolute;inset:0;z-index:55;display:none;flex-direction:column;align-items:center;
+    justify-content:center;gap:14px;background:rgba(6,9,13,.92);text-align:center;padding:24px}
+  body.touch #rot.on{display:flex}
+  #rot .ic{font-size:34px;animation:spin 2.4s linear infinite}
+  @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(90deg)}}
+  #rot .t{font-size:15px;color:#dfe9f4;line-height:1.7}
+  #rot .t b{color:#4fd08a}
 
   #pause{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
     gap:12px;background:rgba(8,11,16,.86);z-index:30}
   #pause.on{display:flex}
   #pause h2{margin:0;font-size:20px;letter-spacing:4px}
-  #pTop{position:absolute;right:14px;top:calc(10px + env(safe-area-inset-top));display:flex;gap:8px;z-index:12}
+  #pTop{position:absolute;right:14px;top:10px;top:calc(10px + env(safe-area-inset-top, 0px));display:flex;gap:8px;z-index:12}
   body:not(.playing) #pTop{display:none}
   #err{position:absolute;left:8px;right:8px;top:8px;z-index:60;display:none;background:rgba(120,20,20,.92);
     border:1px solid #ff7b6b;border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.5;
@@ -115,7 +130,8 @@
   #err.on{display:block}
   #pTop button{width:34px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.14);
     background:rgba(12,16,22,.7);color:#cfdae6;font-size:14px;cursor:pointer;pointer-events:auto}
-  #toast{position:absolute;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);
+  #toast{position:absolute;left:50%;bottom:96px;bottom:calc(96px + env(safe-area-inset-bottom, 0px));
+    transform:translateX(-50%);
     background:rgba(10,14,20,.86);border:1px solid rgba(255,255,255,.12);border-radius:8px;
     padding:6px 14px;font-size:12px;opacity:0;transition:opacity .2s;pointer-events:none}
   #toast.on{opacity:1}
@@ -150,12 +166,20 @@
   </div>
 
   <div id="mobile">
+    <div id="moveZone"></div>
     <div id="lookZone"></div>
     <div id="stick"><div class="knob"></div></div>
     <div class="tbtn" id="bFire">开火</div>
     <div class="tbtn" id="bJump">跳</div>
     <div class="tbtn" id="bReload">换弹</div>
     <div class="tbtn" id="bWeap">切枪</div>
+  </div>
+
+  <div id="rot">
+    <div class="ic">📱</div>
+    <div class="t">手机横过来，视野才开阔<br><b>点下面的按钮开始</b></div>
+    <button class="btn main" id="bRot">横屏开打</button>
+    <button class="btn ghost" id="bRot2">先这么竖着玩</button>
   </div>
 
   <div id="menu">
@@ -640,7 +664,7 @@
     map: null, world: null, running: false, paused: false, over: false,
     scoreT: 0, scoreCT: 0, goal: 30, clock: 180,
     player: null, bots: [], allies: [], feed: [], particles: [], time: 0,
-    diff: 'normal', twoTeam: true, killFeedSeq: 0, fov: 1.02
+    diff: 'normal', twoTeam: true, killFeedSeq: 0, fov: 1.02, fovX: 1.60
   };
 
   var player = {
@@ -1110,63 +1134,142 @@
     player.pitch = clamp(player.pitch - e.movementY * 0.0022, -1.35, 1.35);
   });
 
+  /* ---------------------------------------------------------- 横屏 */
+  function isPortrait() { return window.innerHeight > window.innerWidth * 1.02; }
+
+  function applyForceLand(on) {
+    document.body.classList.toggle('force-land', !!on);
+    if (on) showRot(false);
+    setTimeout(resize, 40);
+  }
+
+  function lockLandscape() {
+    var ok = false;
+    try {
+      if (screen.orientation && screen.orientation.lock) {
+        var p = screen.orientation.lock('landscape');
+        ok = true;
+        if (p && p.catch) p.catch(function () { applyForceLand(isPortrait()); });
+      } else if (screen.lockOrientation) {
+        screen.lockOrientation('landscape'); ok = true;
+      } else if (screen.mozLockOrientation) {
+        screen.mozLockOrientation('landscape'); ok = true;
+      }
+    } catch (e) { ok = false; }
+    if (!ok) applyForceLand(isPortrait());
+  }
+
+  function enterLandscape() {
+    if (!isMobile) return;
+    var el = document.documentElement;
+    try {
+      if (el.requestFullscreen) {
+        var p = el.requestFullscreen();
+        if (p && p.then) p.then(function () { setTimeout(lockLandscape, 240); }).catch(function () { lockLandscape(); });
+        else setTimeout(lockLandscape, 240);
+      } else if (el.webkitRequestFullscreen) {
+        el.webkitRequestFullscreen();
+        setTimeout(lockLandscape, 280);
+      } else {
+        lockLandscape();
+      }
+    } catch (e) { lockLandscape(); }
+  }
+
+  function showRot(on) {
+    var r = document.getElementById('rot');
+    if (!r) return;
+    var want = !!on && isMobile && isPortrait() && !document.body.classList.contains('force-land');
+    r.classList.toggle('on', want);
+  }
+
   /* ---------------------------------------------------------- 触屏 */
   function initTouch() {
     if (!isMobile) return;
     document.body.classList.add('touch');
     var stick = document.getElementById('stick');
     var knob = stick ? stick.querySelector('.knob') : null;
+    var mzone = document.getElementById('moveZone');
     var look = document.getElementById('lookZone');
     var fire = document.getElementById('bFire');
+    var R = 56;
 
-    function setStick(cx, cy) {
-      if (!stick) return;
-      var r = stick.getBoundingClientRect();
-      var dx = cx - (r.left + r.width / 2);
-      var dy = cy - (r.top + r.height / 2);
-      var max = r.width * 0.42;
-      var d = Math.hypot(dx, dy);
-      var k = d > max ? max / d : 1;
+    // 强制横屏时整个 #app 被旋转 90°，触点的屏幕坐标要逆变换回元素内坐标
+    function toLocal(cx, cy) {
+      if (!document.body.classList.contains('force-land')) return { x: cx, y: cy };
+      var vw = window.innerWidth || 1;
+      return { x: cy, y: vw - cx };
+    }
+
+    function setMove(cx, cy) {
+      var p = toLocal(cx, cy);
+      var dx = p.x - touch.ox, dy = p.y - touch.oy;
+      var d = Math.sqrt(dx * dx + dy * dy);
+      var k = d > R ? R / d : 1;
       var kx = dx * k, ky = dy * k;
       if (knob) knob.style.transform = 'translate(' + kx + 'px,' + ky + 'px)';
-      touch.moveX = clamp(kx / max, -1, 1);
-      touch.moveZ = clamp(ky / max, -1, 1);
+      var nx = kx / R, ny = ky / R;
+      var mag = Math.sqrt(nx * nx + ny * ny);
+      if (mag < 0.18) { touch.moveX = 0; touch.moveZ = 0; return; }
+      var sp = Math.min(1, (mag - 0.18) / 0.55);
+      var sc = sp / mag;
+      touch.moveX = clamp(nx * sc, -1, 1);
+      touch.moveZ = clamp(ny * sc, -1, 1);
     }
-    function clearStick() {
-      touch.moveX = touch.moveZ = 0;
-      if (knob) knob.style.transform = 'translate(0,0)';
+    function endMove() {
+      touch.moveX = 0; touch.moveZ = 0; touch.moveId = -1;
+      if (knob) knob.style.transform = 'translate(0px,0px)';
+      if (stick) stick.classList.remove('on');
     }
-    if (stick) {
-      stick.addEventListener('touchstart', function (e) {
+
+    if (mzone) {
+      mzone.addEventListener('touchstart', function (e) {
         e.preventDefault();
         var t = e.changedTouches[0];
-        touch.stickId = t.identifier;
-        setStick(t.clientX, t.clientY);
+        touch.moveId = t.identifier;
+        var p = toLocal(t.clientX, t.clientY);
+        touch.ox = p.x; touch.oy = p.y;
+        if (stick) {
+          stick.style.left = (p.x - 66) + 'px';
+          stick.style.top = (p.y - 66) + 'px';
+          stick.style.bottom = 'auto';
+          stick.classList.add('on');
+        }
+        setMove(t.clientX, t.clientY);
       }, { passive: false });
-      stick.addEventListener('touchmove', function (e) {
+      mzone.addEventListener('touchmove', function (e) {
         e.preventDefault();
         for (var i = 0; i < e.changedTouches.length; i++) {
-          if (e.changedTouches[i].identifier === touch.stickId) setStick(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+          var t = e.changedTouches[i];
+          if (t.identifier === touch.moveId) setMove(t.clientX, t.clientY);
         }
       }, { passive: false });
-      stick.addEventListener('touchend', clearStick);
-      stick.addEventListener('touchcancel', clearStick);
+      mzone.addEventListener('touchend', function (e) {
+        for (var i = 0; i < e.changedTouches.length; i++) {
+          if (e.changedTouches[i].identifier === touch.moveId) endMove();
+        }
+      });
+      mzone.addEventListener('touchcancel', endMove);
     }
+
     if (look) {
       look.addEventListener('touchstart', function (e) {
         e.preventDefault();
         var t = e.changedTouches[0];
-        touch.lookId = t.identifier; touch.lookX = t.clientX; touch.lookY = t.clientY;
+        touch.lookId = t.identifier;
+        var p = toLocal(t.clientX, t.clientY);
+        touch.lookX = p.x; touch.lookY = p.y;
       }, { passive: false });
       look.addEventListener('touchmove', function (e) {
         e.preventDefault();
         for (var i = 0; i < e.changedTouches.length; i++) {
           var t = e.changedTouches[i];
           if (t.identifier !== touch.lookId) continue;
-          var dx = t.clientX - touch.lookX, dy = t.clientY - touch.lookY;
-          touch.lookX = t.clientX; touch.lookY = t.clientY;
-          player.yaw -= dx * 0.0035;
-          player.pitch = clamp(player.pitch - dy * 0.0032, -1.2, 1.2);
+          var p = toLocal(t.clientX, t.clientY);
+          var dx = p.x - touch.lookX, dy = p.y - touch.lookY;
+          touch.lookX = p.x; touch.lookY = p.y;
+          player.yaw -= dx * 0.0042;
+          player.pitch = clamp(player.pitch - dy * 0.0036, -1.25, 1.25);
         }
       }, { passive: false });
       look.addEventListener('touchend', function () { touch.lookId = -1; });
@@ -1188,6 +1291,12 @@
       player.reloading = 0;
       toast(WEAPONS[player.wpn].name);
     }, { passive: false });
+
+    var bRot = document.getElementById('bRot');
+    if (bRot) bRot.addEventListener('click', function () { showRot(false); enterLandscape(); });
+    var bRot2 = document.getElementById('bRot2');
+    if (bRot2) bRot2.addEventListener('click', function () { showRot(false); });
+    window.addEventListener('orientationchange', function () { setTimeout(function () { showRot(isPortrait()); }, 320); });
   }
 
   function tryJump() {
@@ -1425,6 +1534,13 @@
     }
   }
 
+  /* 视野：以"水平视野"为基准换算垂直视野，竖屏也不会变成一条缝 */
+  function fovFor(aspect) {
+    var fx = G.fovX || 1.60;
+    var fy = 2 * Math.atan(Math.tan(fx / 2) / Math.max(aspect, 0.72));
+    return Math.max(0.62, Math.min(fy, 1.34));
+  }
+
   function drawFrame() {
     if (!gl || !G.world) return;
     var w = canvas.width, h = canvas.height;
@@ -1440,7 +1556,7 @@
     var camPos = { x: player.x, y: eyeY, z: player.z };
     var yaw = player.yaw - player.kickYaw * 0.02;
     var pitch = player.pitch + camPitchOffset;
-    perspective(proj, G.fov, w / h, 0.05, 400);
+    perspective(proj, fovFor(w / h), w / h, 0.05, 400);
     viewMatrix(view, camPos, yaw, pitch);
     mul(mvp, proj, view);
     mul(mv, view, ident(m4()));
@@ -1502,7 +1618,7 @@
   var vmProj = m4();
   function drawViewModel(w, h) {
     // 视图空间画枪：不再乘 view
-    perspective(vmProj, G.fov, w / h, 0.02, 10);
+    perspective(vmProj, fovFor(w / h), w / h, 0.02, 10);
     gl.uniformMatrix4fv(loc.uMVP, false, vmProj);
     gl.uniformMatrix4fv(loc.uMV, false, ident(m4()));
     gl.uniform1f(loc.uFar, 10);
@@ -1614,6 +1730,15 @@
     el.mapName.textContent = G.map.name;
     updateHUD();
     toast('目标：先拿到 ' + G.goal + ' 杀');
+    if (isMobile) {
+      resize();
+      enterLandscape();
+      setTimeout(function () {
+        resize();
+        showRot(isPortrait());
+        toast('左半屏任意位置按住=摇杆 · 右半屏划动=瞄准');
+      }, 850);
+    }
   }
 
   function showEnd(win) {
@@ -1728,13 +1853,19 @@
   /* ================================================================ 尺寸 */
   function resize() {
     if (!canvas) return;
-    var dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 2 : 2);
-    var w = Math.floor((window.innerWidth || 800) * dpr);
-    var h = Math.floor((window.innerHeight || 600) * dpr);
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var app = document.getElementById('app');
+    // 用 #app 的布局尺寸（clientWidth 不受 transform 影响），强制横屏旋转后也能拿到正确的宽高
+    var cw = (app && app.clientWidth) || window.innerWidth || 800;
+    var ch = (app && app.clientHeight) || window.innerHeight || 600;
+    if (cw < 40 || ch < 40) { cw = window.innerWidth || 800; ch = window.innerHeight || 600; }
+    var w = Math.floor(cw * dpr);
+    var h = Math.floor(ch * dpr);
     if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
   }
   window.addEventListener('resize', resize);
-  window.addEventListener('orientationchange', function () { setTimeout(resize, 250); });
+  window.addEventListener('orientationchange', function () { setTimeout(resize, 260); });
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', resize);
 
   /* ================================================================ 启动 */
   function showErr(msg) {
@@ -1787,7 +1918,7 @@
     fire: function () { tryFire(); },
     aim: function (yaw, pitch) { player.yaw = yaw; player.pitch = pitch; },
     dbgProject: function (pos, yaw, pitch, aspect, pt) {
-      perspective(proj, G.fov, aspect, 0.05, 400);
+      perspective(proj, fovFor(aspect), aspect, 0.05, 400);
       viewMatrix(view, pos, yaw, pitch);
       mul(mvp, proj, view);
       var v = [pt[0], pt[1], pt[2], 1];
