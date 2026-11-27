@@ -539,16 +539,17 @@
       for (var x2 = 0; x2 < w; x2++) {
         var wx = (x2 - (w - 1) / 2) * cell, wz = (z2 - (h - 1) / 2) * cell;
         var hx = cell / 2;
+        // 室内地图先铺一整层天花板（含实体格上方），避免箱子/矮墙上头漏天
+        if (map.ceilSolid) {
+          var cc = hexToRGB(map.palette['#'] || '#666666');
+          quad([wx - hx, map.ceil, wz - hx], [wx + hx, map.ceil, wz - hx],
+            [wx + hx, map.ceil, wz + hx], [wx - hx, map.ceil, wz + hx],
+            [0, -1, 0], [cc[0] * 0.78, cc[1] * 0.78, cc[2] * 0.78]);
+        }
         if (!solid[z2][x2]) {
           var col = ((x2 + z2) & 1) ? groundA : groundB;
           quad([wx - hx, 0, wz - hx], [wx + hx, 0, wz - hx], [wx + hx, 0, wz + hx], [wx - hx, 0, wz + hx],
             [0, 1, 0], col);
-          if (map.ceilSolid) {
-            var cc = hexToRGB(map.palette['#'] || '#666666');
-            quad([wx - hx, map.ceil, wz - hx], [wx + hx, map.ceil, wz - hx],
-              [wx + hx, map.ceil, wz + hx], [wx - hx, map.ceil, wz + hx],
-              [0, -1, 0], [cc[0] * 0.78, cc[1] * 0.78, cc[2] * 0.78]);
-          }
           continue;
         }
         var hh = heights[z2][x2];
