@@ -1244,10 +1244,12 @@
       return false;
     }
     function onStart(e) {
+      // 点在按钮上：一律交给浏览器原生 click，绝不能 preventDefault（否则暂停/返回/再来一局全部点不动）
+      if (isBtn(e.target)) return;
       if (!document.body.classList.contains('playing')) return;
+      var handled = false;
       for (var i = 0; i < e.changedTouches.length; i++) {
         var t = e.changedTouches[i];
-        if (isBtn(e.target)) continue;
         var p = toLocal(t.clientX, t.clientY);
         if (p.x < appW() * 0.46) {
           touch.moveId = t.identifier;
@@ -1259,18 +1261,22 @@
             stick.classList.add('on');
           }
           setMove(t.clientX, t.clientY);
+          handled = true;
         } else if (touch.lookId === -1) {
           touch.lookId = t.identifier;
           touch.lookX = p.x; touch.lookY = p.y;
+          handled = true;
         }
       }
-      if (e.cancelable) e.preventDefault();
+      if (handled && e.cancelable) e.preventDefault();
     }
     function onMove(e) {
+      var handled = false;
       for (var i = 0; i < e.changedTouches.length; i++) {
         var t = e.changedTouches[i];
         if (t.identifier === touch.moveId) {
           setMove(t.clientX, t.clientY);
+          handled = true;
         } else if (t.identifier === touch.lookId) {
           var p = toLocal(t.clientX, t.clientY);
           // 咬合：屏幕上"向右拖"= 视角右转（旋转兜底时 toLocal 已把坐标换算成游戏内坐标）
@@ -1278,9 +1284,10 @@
           touch.lookX = p.x; touch.lookY = p.y;
           player.yaw -= dx * 0.0052;
           player.pitch = clamp(player.pitch - dy * 0.0042, -1.25, 1.25);
-        } else continue;
+          handled = true;
+        }
       }
-      if (e.cancelable) e.preventDefault();
+      if (handled && e.cancelable) e.preventDefault();
     }
     function onEnd(e) {
       for (var i = 0; i < e.changedTouches.length; i++) {
@@ -1730,6 +1737,9 @@
     G.map = window.CS_MAPS[mapIndex];
     G.world = buildWorld(G.map);
     if (gl) gl.__staticUploaded = false;
+    var pd0 = document.getElementById('pause');
+    if (pd0) pd0.classList.remove('on');
+    document.body.classList.remove('st-over');
     G.scoreT = 0; G.scoreCT = 0; G.clock = 180; G.time = 0; G.over = false; G.paused = false;
     G.bots = []; G.particles = [];
     var names = ['老K', '阿飞', '大熊', '小刀', '铁柱', '老猫', '风哥', '阿泰'];
@@ -1804,6 +1814,24 @@
   }
 
   /* ================================================================ 菜单 */
+  // 菜单按钮三通道（click / pointerup / touchend）：老手机浏览器有时不合成 click，
+  // 400ms 内只认第一次，避免一次点击触发两遍（暂停按钮双触发会立刻又继续）。
+  function tap(id, fn) {
+    var e = document.getElementById(id);
+    if (!e) return;
+    var last = 0;
+    function h(ev) {
+      var now = Date.now();
+      if (now - last < 400) { if (ev && ev.preventDefault) ev.preventDefault(); return; }
+      last = now;
+      if (ev && ev.preventDefault && ev.cancelable) ev.preventDefault();
+      fn(ev);
+    }
+    e.addEventListener('click', h);
+    e.addEventListener('pointerup', h);
+    e.addEventListener('touchend', h, { passive: false });
+  }
+
   var selMap = 0;
   function buildMenu() {
     var box = document.getElementById('maps');
@@ -1839,18 +1867,18 @@
         b.classList.add('on');
       });
     });
-    document.getElementById('bStart').addEventListener('click', function () {
+    tap('bStart', function () {
       ac();
       startGame(selMap);
       lockPointer();
     });
-    document.getElementById('bResume').addEventListener('click', function () {
+    tap('bResume', function () {
       if (G.over) { G.over = false; startGame(selMap); lockPointer(); }
       else togglePause();
     });
-    document.getElementById('bQuit').addEventListener('click', function () { G.over = false; backToMenu(); });
-    document.getElementById('bPause2').addEventListener('click', togglePause);
-    document.getElementById('bFull').addEventListener('click', function () {
+    tap('bQuit', function () { G.over = false; backToMenu(); });
+    tap('bPause2', togglePause);
+    tap('bFull', function () {
       if (document.fullscreenElement) document.exitFullscreen();
       else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
     });
