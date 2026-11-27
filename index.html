@@ -97,12 +97,13 @@
     font-size:12px;font-weight:800;letter-spacing:1px;color:#dfe9f4;pointer-events:auto;
     background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(3px)}
   .tbtn:active,.tbtn.on{background:rgba(255,255,255,.28)}
-  #bFire{right:26px;bottom:30px;bottom:calc(30px + env(safe-area-inset-bottom, 0px));width:96px;height:96px;font-size:14px;
+  #bFire{right:24px;bottom:28px;bottom:calc(28px + env(safe-area-inset-bottom, 0px));width:96px;height:96px;font-size:14px;
     background:rgba(255,90,70,.22);border-color:rgba(255,120,90,.45)}
   #bFire:active{background:rgba(255,90,70,.45)}
-  #bJump{right:136px;bottom:38px;bottom:calc(38px + env(safe-area-inset-bottom, 0px));width:66px;height:66px}
-  #bReload{right:32px;bottom:136px;bottom:calc(136px + env(safe-area-inset-bottom, 0px));width:58px;height:58px;font-size:11px}
-  #bWeap{right:104px;bottom:140px;bottom:calc(140px + env(safe-area-inset-bottom, 0px));width:54px;height:54px;font-size:11px}
+  #bJump{right:128px;bottom:30px;bottom:calc(30px + env(safe-area-inset-bottom, 0px));width:66px;height:66px}
+  #bCrouch{right:136px;bottom:104px;bottom:calc(104px + env(safe-area-inset-bottom, 0px));width:56px;height:56px;font-size:11px}
+  #bReload{right:24px;bottom:132px;bottom:calc(132px + env(safe-area-inset-bottom, 0px));width:56px;height:56px;font-size:11px}
+  #bWeap{right:96px;bottom:196px;bottom:calc(196px + env(safe-area-inset-bottom, 0px));width:54px;height:54px;font-size:11px}
   #bMap{right:14px;top:96px;top:calc(96px + env(safe-area-inset-top, 0px));width:44px;height:44px;font-size:9px;display:none}
   #lookZone{position:absolute;left:46%;right:0;top:0;height:100%;pointer-events:auto}
 
@@ -171,6 +172,7 @@
     <div id="stick"><div class="knob"></div></div>
     <div class="tbtn" id="bFire">开火</div>
     <div class="tbtn" id="bJump">跳</div>
+    <div class="tbtn" id="bCrouch">蹲</div>
     <div class="tbtn" id="bReload">换弹</div>
     <div class="tbtn" id="bWeap">切枪</div>
   </div>
@@ -671,7 +673,7 @@
     x: 0, z: 0, y: 0, vx: 0, vz: 0, vy: 0, yaw: 0, pitch: 0,
     hp: 100, armor: 0, alive: true, respawn: 0, onGround: true,
     team: 'T', wpn: 0, mags: [30, 7], res: [90, 35], cd: 0, reloading: 0,
-    recoil: 0, bob: 0, kickYaw: 0, lastHit: 0, kills: 0, deaths: 0
+    recoil: 0, bob: 0, kickYaw: 0, lastHit: 0, kills: 0, deaths: 0, crouch: false
   };
 
   var DIFF = {
@@ -1108,9 +1110,13 @@
     if (e.code === 'Digit1') { player.wpn = 0; player.reloading = 0; }
     if (e.code === 'Digit2') { player.wpn = 1; player.reloading = 0; }
     if (e.code === 'Digit3') { player.wpn = 2; player.reloading = 0; }
+    if (e.code === 'ControlLeft' || e.code === 'KeyC') { player.crouch = true; }
     if (e.code === 'Escape' && G.running) togglePause();
   });
-  window.addEventListener('keyup', function (e) { keys[e.code] = false; });
+  window.addEventListener('keyup', function (e) {
+    keys[e.code] = false;
+    if (e.code === 'ControlLeft' || e.code === 'KeyC') player.crouch = false;
+  });
 
   function lockPointer() {
     if (isMobile || !canvas.requestPointerLock) return;
@@ -1139,7 +1145,10 @@
 
   function applyForceLand(on) {
     document.body.classList.toggle('force-land', !!on);
-    if (on) showRot(false);
+    if (on) {
+      showRot(false);
+      toast('画面已转成横向 · 把手机横过来拿就正了', 4);
+    }
     setTimeout(resize, 40);
   }
 
@@ -1222,59 +1231,68 @@
       if (stick) stick.classList.remove('on');
     }
 
-    if (mzone) {
-      mzone.addEventListener('touchstart', function (e) {
-        e.preventDefault();
-        var t = e.changedTouches[0];
-        touch.moveId = t.identifier;
-        var p = toLocal(t.clientX, t.clientY);
-        touch.ox = p.x; touch.oy = p.y;
-        if (stick) {
-          stick.style.left = (p.x - 66) + 'px';
-          stick.style.top = (p.y - 66) + 'px';
-          stick.style.bottom = 'auto';
-          stick.classList.add('on');
-        }
-        setMove(t.clientX, t.clientY);
-      }, { passive: false });
-      mzone.addEventListener('touchmove', function (e) {
-        e.preventDefault();
-        for (var i = 0; i < e.changedTouches.length; i++) {
-          var t = e.changedTouches[i];
-          if (t.identifier === touch.moveId) setMove(t.clientX, t.clientY);
-        }
-      }, { passive: false });
-      mzone.addEventListener('touchend', function (e) {
-        for (var i = 0; i < e.changedTouches.length; i++) {
-          if (e.changedTouches[i].identifier === touch.moveId) endMove();
-        }
-      });
-      mzone.addEventListener('touchcancel', endMove);
+    // 触屏统一在 document 上分发：左半屏=移动摇杆，右半屏=瞄准转身。
+    // 不再依赖某个元素是否被点到（旋转、层级、HUD 遮挡都不会收不到事件）
+    var appEl = document.getElementById('app');
+    function appW() { return (appEl && appEl.clientWidth) || window.innerWidth || 400; }
+    function appH() { return (appEl && appEl.clientHeight) || window.innerHeight || 400; }
+    function isBtn(n) {
+      while (n && n !== document.body) {
+        if (n.tagName === 'BUTTON' || (n.classList && n.classList.contains('tbtn'))) return true;
+        n = n.parentNode;
+      }
+      return false;
     }
-
-    if (look) {
-      look.addEventListener('touchstart', function (e) {
-        e.preventDefault();
-        var t = e.changedTouches[0];
-        touch.lookId = t.identifier;
+    function onStart(e) {
+      if (!document.body.classList.contains('playing')) return;
+      for (var i = 0; i < e.changedTouches.length; i++) {
+        var t = e.changedTouches[i];
+        if (isBtn(e.target)) continue;
         var p = toLocal(t.clientX, t.clientY);
-        touch.lookX = p.x; touch.lookY = p.y;
-      }, { passive: false });
-      look.addEventListener('touchmove', function (e) {
-        e.preventDefault();
-        for (var i = 0; i < e.changedTouches.length; i++) {
-          var t = e.changedTouches[i];
-          if (t.identifier !== touch.lookId) continue;
+        if (p.x < appW() * 0.46) {
+          touch.moveId = t.identifier;
+          touch.ox = p.x; touch.oy = p.y;
+          if (stick) {
+            stick.style.left = Math.max(4, Math.min(appW() - 136, p.x - 66)) + 'px';
+            stick.style.top = Math.max(4, Math.min(appH() - 136, p.y - 66)) + 'px';
+            stick.style.bottom = 'auto';
+            stick.classList.add('on');
+          }
+          setMove(t.clientX, t.clientY);
+        } else if (touch.lookId === -1) {
+          touch.lookId = t.identifier;
+          touch.lookX = p.x; touch.lookY = p.y;
+        }
+      }
+      if (e.cancelable) e.preventDefault();
+    }
+    function onMove(e) {
+      for (var i = 0; i < e.changedTouches.length; i++) {
+        var t = e.changedTouches[i];
+        if (t.identifier === touch.moveId) {
+          setMove(t.clientX, t.clientY);
+        } else if (t.identifier === touch.lookId) {
           var p = toLocal(t.clientX, t.clientY);
+          // 咬合：屏幕上"向右拖"= 视角右转（旋转兜底时 toLocal 已把坐标换算成游戏内坐标）
           var dx = p.x - touch.lookX, dy = p.y - touch.lookY;
           touch.lookX = p.x; touch.lookY = p.y;
-          player.yaw -= dx * 0.0042;
-          player.pitch = clamp(player.pitch - dy * 0.0036, -1.25, 1.25);
-        }
-      }, { passive: false });
-      look.addEventListener('touchend', function () { touch.lookId = -1; });
-      look.addEventListener('touchcancel', function () { touch.lookId = -1; });
+          player.yaw -= dx * 0.0052;
+          player.pitch = clamp(player.pitch - dy * 0.0042, -1.25, 1.25);
+        } else continue;
+      }
+      if (e.cancelable) e.preventDefault();
     }
+    function onEnd(e) {
+      for (var i = 0; i < e.changedTouches.length; i++) {
+        var id = e.changedTouches[i].identifier;
+        if (id === touch.moveId) endMove();
+        if (id === touch.lookId) touch.lookId = -1;
+      }
+    }
+    document.addEventListener('touchstart', onStart, { passive: false });
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onEnd);
+    document.addEventListener('touchcancel', onEnd);
     if (fire) {
       fire.addEventListener('touchstart', function (e) { e.preventDefault(); touch.firing = true; fire.classList.add('on'); }, { passive: false });
       fire.addEventListener('touchend', function (e) { e.preventDefault(); touch.firing = false; fire.classList.remove('on'); }, { passive: false });
@@ -1282,6 +1300,12 @@
     }
     var bj = document.getElementById('bJump');
     if (bj) bj.addEventListener('touchstart', function (e) { e.preventDefault(); tryJump(); }, { passive: false });
+    var bc = document.getElementById('bCrouch');
+    if (bc) {
+      bc.addEventListener('touchstart', function (e) { e.preventDefault(); player.crouch = true; bc.classList.add('on'); }, { passive: false });
+      bc.addEventListener('touchend', function (e) { e.preventDefault(); player.crouch = false; bc.classList.remove('on'); }, { passive: false });
+      bc.addEventListener('touchcancel', function () { player.crouch = false; bc.classList.remove('on'); });
+    }
     var br = document.getElementById('bReload');
     if (br) br.addEventListener('touchstart', function (e) { e.preventDefault(); startReload(); }, { passive: false });
     var bw = document.getElementById('bWeap');
@@ -1300,6 +1324,7 @@
   }
 
   function tryJump() {
+    if (player.crouch) return;
     if (player.alive && player.onGround) { player.vy = 4.9; player.onGround = false; }
   }
 
@@ -1326,7 +1351,7 @@
     }
     var mag = Math.hypot(mx, mz);
     if (mag > 1) { mx /= mag; mz /= mag; mag = 1; }
-    var speed = (isMobile ? 5.0 : 5.4) * (keys.ShiftLeft ? 0.55 : 1);
+    var speed = (isMobile ? 5.0 : 5.4) * (keys.ShiftLeft ? 0.55 : 1) * (player.crouch ? 0.48 : 1);
     var sy = Math.sin(player.yaw), cy = Math.cos(player.yaw);
     // forward = (-sin, -cos)  right = (cos, -sin)；mz 为 -1 表示向前
     var wx = (mz * sy + mx * cy) * speed;
@@ -1420,11 +1445,11 @@
     while (el.feed.children.length > 5) el.feed.removeChild(el.feed.firstChild);
   }
 
-  function toast(msg) {
+  function toast(msg, sec) {
     if (!el.toast) return;
     el.toast.textContent = msg;
     el.toast.classList.add('on');
-    toastT = 1.4;
+    toastT = sec || 1.4;
   }
 
   function updateHUD() {
@@ -1537,8 +1562,8 @@
   /* 视野：以"水平视野"为基准换算垂直视野，竖屏也不会变成一条缝 */
   function fovFor(aspect) {
     var fx = G.fovX || 1.60;
-    var fy = 2 * Math.atan(Math.tan(fx / 2) / Math.max(aspect, 0.72));
-    return Math.max(0.62, Math.min(fy, 1.34));
+    var fy = 2 * Math.atan(Math.tan(fx / 2) / Math.max(aspect, 0.62));
+    return Math.max(0.62, Math.min(fy, 1.90));
   }
 
   function drawFrame() {
@@ -1552,7 +1577,8 @@
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     var m = G.map;
-    var eyeY = player.y + 1.62 + Math.sin(player.bob) * 0.035;
+    var eyeH = player.crouch ? 1.04 : 1.62;
+    var eyeY = player.y + eyeH + Math.sin(player.bob) * 0.035;
     var camPos = { x: player.x, y: eyeY, z: player.z };
     var yaw = player.yaw - player.kickYaw * 0.02;
     var pitch = player.pitch + camPitchOffset;
